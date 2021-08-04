@@ -71,33 +71,12 @@ int tx_encode_frame_index = 0;
 uint8_t rx_raw_audio_value = 127;                      // No audio value (middle)
 int adc_buffer_index = 0;
 
-
-
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
-
-
-//#include <SPI.h>
-//#include <LoRa.h>               //https://github.com/sandeepmistry/arduino-LoRa
 
 #include <codec2.h>				      //In the codec2 folder in the library folder
 #include <ButterworthFilter.h>	//In the codec2 folder in the library folder
 #include <FastAudioFIFO.h>		  //In the codec2 folder in the library folder
-/*
-#define SCK     5    // GPIO5  -- SX1278's SCK
-#define MISO    19   // GPIO19 -- SX1278's MISnO
-#define MOSI    27   // GPIO27 -- SX1278's MOSI
-#define SS      18   // GPIO18 -- SX1278's CS
-#define RST     14   // GPIO14 -- SX1278's RESET
-#define DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
-*/
-
-/*
-//int16_t 1KHz sine test tone
-int16_t Sine1KHz[8] = { -21210 , -30000, -21210, 0 , 21210 , 30000 , 21210, 0 };
-int Sine1KHz_index = 0;
-*/
 
 FastAudioFIFO audio_fifo;
 
@@ -106,8 +85,6 @@ enum RadioState
 	radio_standby, radio_rx, radio_tx 
 };
 volatile RadioState radio_state = RadioState::radio_tx;
-
-
 
 //The codec2 
 struct CODEC2* codec2_state;
@@ -122,16 +99,12 @@ TaskHandle_t codec2HandlerTask;
 
 ////////////////////////////////////End of Variables///////////////////////////////////////////////////////////////////////////
 
-
-
-
-
 /////////////////////////////////////Start of event handler functions//////////////////////////////////////////////////////////////
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *data, int len) {
-  //Serial.print("bytes received: ");
-  //Serial.print(len);
-  //Set the state to radio_rx because we are receiving
+    //Serial.print("bytes received: ");
+    //Serial.print(len);
+    //Set the state to radio_rx because we are receiving
     radio_state = RadioState::radio_rx;
     //Serial.println("Receiving audio packets...");
     
@@ -152,63 +125,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *data, int len) {
  }
 }
 
-
-
-/*
-// OnTxDone event handler
-void onTxDone() 
-{
-//	slapsed_tx = millis() - start_tx; //Just for debug
-//	LoRa.receive(); //The transmission is done, so let's be ready for reception
-	Serial.println("Waiting for audio packets...");
- 
-//	tx_ok = true;
-}
-*/
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
-// onReceive event handler
-void onReceive(int packetSize) 
-{
-  if (packetSize == ENCODE_FRAME_SIZE)// We received a voice packet
-  {
-    //read the packet
-    for (int i = 0; i < packetSize; i++) 
-  //    rx_encode_frame[i] = LoRa.read();
-      
-    //Set the state to radio_rx because we are receiving
-    radio_state = RadioState::radio_rx;
-    Serial.println("Receiving audio packets...");
-    
-    // Notify run_codec2 task that we have received a new packet.
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    vTaskNotifyGiveFromISR(codec2HandlerTask, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken)
-    {
-      portYIELD_FROM_ISR();
-    }
-  }
-}
-
-
-// onReceive event handler
-void onReceive() 
-{
- 
-   //Set the state to radio_rx because we are receiving
-    radio_state = RadioState::radio_rx;
-    Serial.println("Receiving audio packets...");
-    
-    // Notify run_codec2 task that we have received a new packet.
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    vTaskNotifyGiveFromISR(codec2HandlerTask, &xHigherPriorityTaskWoken);
-    if (xHigherPriorityTaskWoken)
-    {
-      portYIELD_FROM_ISR();
-    }
-  }
-*/
-
 ////////////////////////////////////////End of event handler functions/////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////Start of timer function/////////////////////////////////////////////////////////////////////
@@ -216,7 +132,7 @@ void onReceive()
 void IRAM_ATTR onTimer() {
 	portENTER_CRITICAL_ISR(&timerMux);                //Enter crital code without interruptions
 
-/////////////////////////////////Transmit Audio from microphone////////////////////////////////////////////////////////////////////////////
+                         /////////Transmit Audio from microphone////////////////
 
 	if (radio_state == RadioState::radio_tx)          // Microphone is open and active
 	{
@@ -244,7 +160,7 @@ void IRAM_ATTR onTimer() {
 		}
 	}
 	
-////////////////////////Create audio & write to DAC///////////////////////////////////////////////////////////////////////////
+               //////Create audio & write to DAC///////////
 	
 	else if (radio_state == RadioState::radio_rx)
 	{
@@ -296,7 +212,7 @@ void run_codec2(void* parameter)          // This function is called from setup
 				last_state = radio_state;
 			}
 
-/////////////////Trasmitting audio data from microphone/////////////////////////////////////////////////////////
+                       /////////////////Trasmitting audio data from microphone////////////////////////
 			
 			if (radio_state == RadioState::radio_tx)    // Trasnmitting - Microphone open and active
 			{
@@ -319,12 +235,7 @@ void run_codec2(void* parameter)          // This function is called from setup
 				{
 					//start_tx = millis(); //Just for debug
 					tx_encode_frame_index = ENCODE_FRAME_HEADER_SIZE;  // increment the pointer at 4 bytes
-        /*
-					//Transmit it
-					LoRa.beginPacket();
-					LoRa.write(tx_encode_frame, ENCODE_FRAME_SIZE);  // Transmit 44 bytes of packet
-					LoRa.endPacket(true);
-        */
+       
 				}
 			}
 
@@ -357,7 +268,7 @@ void run_codec2(void* parameter)          // This function is called from setup
 ///////////////////////////////////////////Start of setup////////////////////////////////////////////////////////////////////
 
 void setup() {
-	Serial.begin(115200); 
+  Serial.begin(115200); 
 
    // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
@@ -382,33 +293,13 @@ void setup() {
     return;
   }
   
-/*
-	SPI.begin(SCK, MISO, MOSI, SS);
-	LoRa.setPins(SS, RST, DI0);
-
-	if (!LoRa.begin(FREQUENCY)) 
-	{
-		Serial.println("Starting LoRa failed!");
-		while (1);
-	}
-
-	LoRa.setSpreadingFactor(9);
-	LoRa.setSignalBandwidth(250E3);
-	LoRa.setCodingRate4(7); // 4/7
-	LoRa.setPreambleLength(6);
-	LoRa.setSyncWord(0x12);
-	LoRa.enableCrc();
-	LoRa.onTxDone(onTxDone);
-	LoRa.onReceive(onReceive);
-  */
-
 
 	adc1_config_width(ADC_WIDTH_12Bit);
 	adc1_config_channel_atten(ADC_PIN, ADC_ATTEN_DB_6); //ADC 1 channel 0 (GPIO36).
 
 	//Start the task that run the coder and decoder
 	xTaskCreate(&run_codec2, "codec2_task", 30000, NULL, 5, &codec2HandlerTask);
-  Serial.println("Codec2 encoder & decoder Started....");
+        Serial.println("Codec2 encoder & decoder Started....");
 	
 	//Start a timer at 8kHz to sample the ADC and play the audio on the DAC.
 	adcTimer = timerBegin(3, 500, true);            // 80 MHz / 500 = 160KHz MHz hardware clock
@@ -428,60 +319,29 @@ void setup() {
 
 //////////////////////////////////////End of setup//////////////////////////////////////////////////////////////////
 
-
-
-
 void loop() {
   // Serial.println(touchRead(4));
 	if (digitalRead(PTT_PIN) == LOW || touchRead(4) < 30)
 	{
-		
-		radio_state = RadioState::radio_tx;
-    //strcpy(myData.voiceData, tx_encode_frame);
-    //myData.voiceData = tx_encode_frame;
-  
+          radio_state = RadioState::radio_tx;
+    
   // Send message via ESP-NOW
-  //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) tx_encode_frame, sizeof(tx_encode_frame)); 
   
   if (result == ESP_OK) {
   //  Serial.println("Sent with success");
   }
   else {
-    Serial.println("Error sending the data");
+         Serial.println("Error sending the data");
   }
  
-  //  Serial.println("Transmitting audio packets...");
+         // Serial.println("Transmitting audio packets...");
 	}
 	else //if (tx_ok)
 	{
-		radio_state = RadioState::radio_rx;
-  //  Serial.println("Waiting for audio packets...");
+         radio_state = RadioState::radio_rx;
+        // Serial.println("Waiting for audio packets...");
 	}
-
-/*
-	//Some DEBUG stuffs, you can remove it if you want.
-	if (rx_ok)
-	{
-		Serial.print(rx_ok_counter);
-		Serial.print(" Dec=");
-		Serial.println(slapsed_decoder);
-		rx_ok_counter++;
-		rx_ok = false;
-	}
-
-	if (tx_ok)
-	{
-		Serial.print(tx_ok_counter);
-		Serial.print(" Enc=");
-		Serial.print(slapsed_encoder);
-		Serial.print(" Tx=");
-		Serial.println(slapsed_tx);		
-		tx_ok_counter++;
-		tx_ok = false;
-	}
-
-	*/
 
 	delay(1);//At least 1ms please!
 }
