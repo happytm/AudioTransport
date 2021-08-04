@@ -35,13 +35,7 @@ uint8_t audioData[audioBytes] =
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-/*
-// Structure example to send data
-// Must match the receiver structure
-typedef struct test_struct {
- uint8_t audioData[112];
-} test_struct;
-*/
+
 void OnDataRecv(const uint8_t * mac, const uint8_t *data, int len) {
   Serial.print("bytes received: ");
   Serial.print(len);
@@ -99,7 +93,7 @@ void loop() {
     Serial.println("Error sending the audio data...");
   }
   
-  dacWrite(lineOut, audioData[i]); // Play audio locally via DAC.
+  dacWrite(lineOut, audioData[i]);           // Play audio locally via DAC.
   if (i >= audioBytes) i = 0; 
   
   }
