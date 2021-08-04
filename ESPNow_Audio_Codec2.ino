@@ -47,6 +47,9 @@
 
 #include <Arduino.h>
 #include <driver/adc.h>
+#include <codec2.h>              //In the codec2 folder in the library folder
+#include <ButterworthFilter.h>  //In the codec2 folder in the library folder
+#include <FastAudioFIFO.h>      //In the codec2 folder in the library folder
 
 #include <esp_now.h>
 #include <WiFi.h>
@@ -74,10 +77,6 @@ int adc_buffer_index = 0;
 // REPLACE WITH YOUR RECEIVER MAC Address
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-#include <codec2.h>				      //In the codec2 folder in the library folder
-#include <ButterworthFilter.h>	//In the codec2 folder in the library folder
-#include <FastAudioFIFO.h>		  //In the codec2 folder in the library folder
-
 FastAudioFIFO audio_fifo;
 
 enum RadioState
@@ -91,7 +90,6 @@ struct CODEC2* codec2_state;
 
 //Implement a high pass 240Hz Butterworth Filter.
 ButterworthFilter hp_filter(240, 8000, ButterworthFilter::ButterworthFilter::Highpass, 1);
-
 hw_timer_t* adcTimer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 TaskHandle_t codec2HandlerTask;
@@ -99,12 +97,13 @@ TaskHandle_t codec2HandlerTask;
 
 ////////////////////////////////////End of Variables///////////////////////////////////////////////////////////////////////////
 
+
 /////////////////////////////////////Start of event handler functions//////////////////////////////////////////////////////////////
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *data, int len) {
-    //Serial.print("bytes received: ");
-    //Serial.print(len);
-    //Set the state to radio_rx because we are receiving
+  //Serial.print("bytes received: ");
+  //Serial.print(len);
+  //Set the state to radio_rx because we are receiving
     radio_state = RadioState::radio_rx;
     //Serial.println("Receiving audio packets...");
     
@@ -132,7 +131,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *data, int len) {
 void IRAM_ATTR onTimer() {
 	portENTER_CRITICAL_ISR(&timerMux);                //Enter crital code without interruptions
 
-                         /////////Transmit Audio from microphone////////////////
+/////////////////////////////////Transmit Audio from microphone////////////////////////////////////////////////////////////////////////////
 
 	if (radio_state == RadioState::radio_tx)          // Microphone is open and active
 	{
@@ -160,7 +159,7 @@ void IRAM_ATTR onTimer() {
 		}
 	}
 	
-               //////Create audio & write to DAC///////////
+////////////////////////Create audio & write to DAC///////////////////////////////////////////////////////////////////////////
 	
 	else if (radio_state == RadioState::radio_rx)
 	{
@@ -168,8 +167,8 @@ void IRAM_ATTR onTimer() {
     
     if (audio_fifo.get(&v))                               // Get audio data to send it to DAC to play
 			rx_raw_audio_value = (uint8_t)((v + 32768) / 256);  // Store audio data in 0-255 values to uint8_t integer type variable
-      dacWrite(lineOut, rx_raw_audio_value); // Play stream from uint8_t integer type variable values (audio data)
-	//    Serial.print(rx_raw_audio_value);
+      //dacWrite(`, rx_raw_audio_value); // Play stream from uint8_t integer type variable values (audio data)
+	    //Serial.print(rx_raw_audio_value);
 	}
 	portEXIT_CRITICAL_ISR(&timerMux); // exit critical code
 }
@@ -212,7 +211,7 @@ void run_codec2(void* parameter)          // This function is called from setup
 				last_state = radio_state;
 			}
 
-                       /////////////////Trasmitting audio data from microphone////////////////////////
+/////////////////Trasmitting audio data from microphone/////////////////////////////////////////////////////////
 			
 			if (radio_state == RadioState::radio_tx)    // Trasnmitting - Microphone open and active
 			{
@@ -268,7 +267,7 @@ void run_codec2(void* parameter)          // This function is called from setup
 ///////////////////////////////////////////Start of setup////////////////////////////////////////////////////////////////////
 
 void setup() {
-  Serial.begin(115200); 
+	Serial.begin(115200); 
 
    // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
@@ -293,21 +292,18 @@ void setup() {
     return;
   }
   
-
 	adc1_config_width(ADC_WIDTH_12Bit);
 	adc1_config_channel_atten(ADC_PIN, ADC_ATTEN_DB_6); //ADC 1 channel 0 (GPIO36).
 
 	//Start the task that run the coder and decoder
 	xTaskCreate(&run_codec2, "codec2_task", 30000, NULL, 5, &codec2HandlerTask);
-        Serial.println("Codec2 encoder & decoder Started....");
+  Serial.println("Codec2 encoder & decoder Started....");
 	
 	//Start a timer at 8kHz to sample the ADC and play the audio on the DAC.
 	adcTimer = timerBegin(3, 500, true);            // 80 MHz / 500 = 160KHz MHz hardware clock
 	timerAttachInterrupt(adcTimer, &onTimer, true); // Attaches the handler function to the timer 
 	timerAlarmWrite(adcTimer, 20, true);            // Interrupts when counter == 20, 8.000 times a second
 	timerAlarmEnable(adcTimer);                     // Activate it
-
-	//last_tick = millis(); //Just for debug
 
 	//Configure PTT input button
 	pinMode(PTT_PIN, INPUT_PULLUP);
@@ -321,27 +317,30 @@ void setup() {
 
 void loop() {
   // Serial.println(touchRead(4));
-	if (digitalRead(PTT_PIN) == LOW || touchRead(4) < 30)
+	if (digitalRead(PTT_PIN) == LOW || touchRead(4) < 50)
 	{
-          radio_state = RadioState::radio_tx;
-    
+		
+		radio_state = RadioState::radio_tx;
+    //strcpy(myData.voiceData, tx_encode_frame);
+    //myData.voiceData = tx_encode_frame;
+  
   // Send message via ESP-NOW
+  //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) tx_encode_frame, sizeof(tx_encode_frame)); 
   
   if (result == ESP_OK) {
   //  Serial.println("Sent with success");
   }
   else {
-         Serial.println("Error sending the data");
+    Serial.println("Error sending the data");
   }
  
-         // Serial.println("Transmitting audio packets...");
+  //  Serial.println("Transmitting audio packets...");
 	}
 	else //if (tx_ok)
 	{
-         radio_state = RadioState::radio_rx;
-        // Serial.println("Waiting for audio packets...");
+		radio_state = RadioState::radio_rx;
+  //  Serial.println("Waiting for audio packets...");
 	}
-
-	delay(1);//At least 1ms please!
+	delay(1);              //At least 1ms please!
 }
