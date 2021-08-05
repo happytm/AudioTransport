@@ -40,7 +40,8 @@
  The challenge of a frequency hopping system is the synchronization, 
  maybe you can use a GPS receiver for synchronization.
  
- Use coddec2 library from this link https://github.com/LieBtrau/digital-walkie-talkie/tree/master/firmware/tests/audio/esp32-codec2/lib/Codec2/src
+change line 58 of phaseexp.c in codec2 library:  // https://github.com/drowe67/codec2/issues/201
+from: char c; to: unsigned char c;
  
  **************************************************************
 */
