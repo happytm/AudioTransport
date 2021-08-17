@@ -55,7 +55,7 @@ float get_float(FILE * in, const char * name, char * * cursor, char * buffer, in
 {
   for ( ; ; ) {
     char *	s = *cursor;
-    char	c;
+    unsigned char	c;
 
     while ( (c = *s) != '\0' && !isdigit(c) && c != '-' && c != '.' )
       s++;
