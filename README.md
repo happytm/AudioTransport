@@ -1,2 +1,2 @@
 # AudioTransport
-Wireless audio transport over ESPNow &amp; LoRa
+Wireless Codec2 compressed audio transport over ESPNow.
