@@ -27,8 +27,8 @@ uint8_t audioData[6];  // audio frame to be sent to Gateway
 int16_t adc_buffer[ADC_BUFFER_SIZE];                   // 320 = 40ms of voice in 8KHz sampling frequency
 int16_t speech[ADC_BUFFER_SIZE];                       // 320 = 40ms of voice in 8KHz sampling frequency
 int16_t output_buffer[ADC_BUFFER_SIZE];                // 320 = 40ms of voice in 8KHz sampling frequency
-uint8_t rx_encode_frame[ENCODE_FRAME_SIZE];      // 34 =  First four bytes non-audio + 40 bytes audio
-uint8_t tx_encode_frame[ENCODE_FRAME_SIZE];      // 34 bytes
+uint8_t rx_encode_frame[ENCODE_FRAME_SIZE];      // 44 =  First four bytes non-audio + 40 bytes audio
+uint8_t tx_encode_frame[ENCODE_FRAME_SIZE];      // 4b4 bytes
 
 int tx_encode_frame_index = 0;
 uint8_t rx_raw_audio_value = 127;                      
