@@ -302,7 +302,7 @@ void loop() {
   {
     radio_state = RadioState::radio_tx;
     Serial.println("Transmitting audio packets...");        
-  } else if (tx_ok) {
+  } else {
      radio_state = RadioState::radio_rx;
   }
 
