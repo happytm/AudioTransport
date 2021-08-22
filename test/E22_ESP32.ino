@@ -9,7 +9,7 @@
 #define lineOut 25
 #define PTT_PIN 12
 
-#define ADC_BUFFER_SIZE 320             // 40ms of voice in 8KHz sampling frequency
+#define ADC_BUFFER_SIZE 320              // 40ms of voice in 8KHz sampling frequency
 #define ENCODE_FRAME_SIZE 44            // 44 =  First four bytes non-audio + 40 bytes audio
 #define ENCODE_CODEC2_FRAME_SIZE 8      // 8 bytes per packets x 5 packets = 40 bytes of audio packet
 #define ENCODE_FRAME_HEADER_SIZE 4      // 4 bytes of non-audio data
@@ -52,9 +52,7 @@ struct Message {
 // onReceive event handler
 void onReceive() 
 {
-    radio_state = RadioState::radio_rx;
-    //Serial.println("Waiting for audio packets...");
-
+    
     if (Lora.available()>1) {
     // read the String message
     #ifdef ENABLE_RSSI
@@ -71,14 +69,18 @@ void onReceive()
     
     // Print the data received
     //Serial.println(rsc.status.getResponseDescription());
-    
     struct Message message = *(Message*) rsc.data;
-    for (int i = 0; i < ENCODE_FRAME_SIZE; i++) 
+    
+    
+    for (int i = 4; i < 404; i++) 
     {
       //Serial.println(message.audio[i]);
-      rx_encode_frame[i] = message.audio[i];
+      rx_encode_frame[i] += message.audio[i];
     }
-  }
+    radio_state = RadioState::radio_rx;
+    //Serial.println("Waiting for audio packets...");
+  } 
+  
     // Notify run_codec2 task that we have received a new packet.
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     vTaskNotifyGiveFromISR(codec2HandlerTask, &xHigherPriorityTaskWoken);
@@ -267,4 +269,4 @@ void loop() {
      onReceive();  
   }
   delay(1);              //At least 1ms please!
-}                        // End of Loop
+}                        // End of Loopb
