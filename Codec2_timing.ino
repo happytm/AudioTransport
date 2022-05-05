@@ -1,11 +1,12 @@
 // https://github.com/deulis/ESP32_Codec2/issues/4
 
 #include <codec2.h>
+#define lineOut 25                      // DAC pin (GPIO 25 or 26 of ESP32)
 
 struct CODEC2* codec2_state;
 
 int16_t sine1KHz[8] = { -21210 , -30000, -21210, 0 , 21210 , 30000 , 21210, 0 };
-
+uint8_t rx_raw_audio_value = 0;
 int16_t audioBuf[320];
 uint8_t c2Buf[8];
 boolean flagEncodeAudioBuf = false;
@@ -19,14 +20,18 @@ void setup() {
   // Set bitrate
   codec2_state = codec2_create(CODEC2_MODE_1600);
   // Set some tuning parameters
-  codec2_set_lpc_post_filter(codec2_state, 1, 0, 0.8, 0.2) 
+  codec2_set_lpc_post_filter(codec2_state, 1, 0, 0.8, 0.2);
+
   
-  xTaskCreate(&codec2_watcher, "codec2_watcher_task", 30000, NULL, 5, NULL);
+  
+  
 }
 
 void loop() {
-  
-   // Encode a (fixed size) input buffer of type int16_t to a (fixed size) output buffer
+
+  xTaskCreate(&codec2_watcher, "codec2_watcher_task", 30000, NULL, 5, NULL);
+
+  // Encode a (fixed size) input buffer of type int16_t to a (fixed size) output buffer
   // CODEC2_MODE_1600 encodes 320 speech samples (320 * 2 = 640 bytes / 40ms of speech) into 8 bytes (64 bits)
   // Fill buffer with a sine wave
   for (int i = 0; i < 320; i++) audioBuf[i] = sine1KHz[i % 8];
@@ -51,8 +56,7 @@ void loop() {
   
   dacWrite(lineOut, (audioBuf, DEC)); 
   delay(5000);
-  
-}
+} //End of loop
 
 void c2_encode() {
   flagEncodeAudioBuf = true;
