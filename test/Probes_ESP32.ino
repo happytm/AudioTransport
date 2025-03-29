@@ -213,7 +213,7 @@ void setup() {
   radio_state = RadioState::radio_rx;
   Serial.println("Waiting to send or receive audio packets...");
    
-  WiFi.onEvent(probeRequest, SYSTEM_EVENT_AP_PROBEREQRECVED);
+  WiFi.onEvent(probeRequest,WiFiEvent_t::ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED);
   Serial.print("Waiting for probe requests ... ");
 }
 
